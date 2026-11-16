@@ -40,6 +40,24 @@ export function HelpModal({ language, isOpen, onClose }: HelpModalProps) {
 
         <div className="space-y-6 text-sm text-slate-700">
           <div>
+            <h3 className="mb-2 font-bold text-indigo-700">{t.helpAtemTitle}</h3>
+            <ol className="list-decimal space-y-1.5 pl-5">
+              {t.helpAtemSteps.map((step, i) => (
+                <li key={i}>{step}</li>
+              ))}
+            </ol>
+          </div>
+
+          <div>
+            <h3 className="mb-2 font-bold text-purple-700">{t.helpAtemAnimatedTitle}</h3>
+            <ol className="list-decimal space-y-1.5 pl-5">
+              {t.helpAtemAnimatedSteps.map((step, i) => (
+                <li key={i}>{step}</li>
+              ))}
+            </ol>
+          </div>
+
+          <div>
             <h3 className="mb-2 font-bold text-sky-700">{t.helpVirtualSetTitle}</h3>
             <ol className="list-decimal space-y-1.5 pl-5">
               {t.helpVirtualSetSteps.map((step, i) => (
@@ -57,7 +75,7 @@ export function HelpModal({ language, isOpen, onClose }: HelpModalProps) {
             </ol>
           </div>
 
-          <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
             <h3 className="mb-2 font-bold text-slate-800">{t.helpShortcutsTitle}</h3>
             <ul className="list-disc space-y-1.5 pl-5 text-xs text-slate-600">
               {t.helpShortcuts.map((tip, i) => (

@@ -1,5 +1,7 @@
 import JSZip from 'jszip';
+import { getBoxesInDrawOrder } from './atemMath';
 import {
+  ATEM_SOURCES,
   BOX_THEMES,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -13,7 +15,7 @@ import {
   generateMultiviewXml,
   generateVirtualSetXml,
 } from './xmlGenerators';
-import type { BoxConfig } from '../types/layout';
+import type { BoxConfig, BuilderMode } from '../types/layout';
 
 export function sanitizeZipFilename(rawName: string): string {
   const trimmed = rawName.trim() || DEFAULT_SET_NAME;
@@ -88,6 +90,7 @@ async function canvasToUint8Array(canvas: HTMLCanvasElement): Promise<Uint8Array
 export async function renderLayoutPngBlob(
   boxes: BoxConfig[],
   backgroundImage: HTMLImageElement | null,
+  mode: BuilderMode = 'vmix',
 ): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -102,8 +105,8 @@ export async function renderLayoutPngBlob(
     drawCoverImage(ctx, backgroundImage, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
 
-  for (const box of boxes) {
-    if (!box.enabled || box.size <= 0) continue;
+  for (const box of getBoxesInDrawOrder(boxes, mode)) {
+    if (box.size <= 0) continue;
     const theme = BOX_THEMES[box.id - 1] ?? BOX_THEMES[0];
     const rect = computeBoxVisualRect(box);
     if (rect.visibleWidth <= 0 || rect.visibleHeight <= 0) continue;
@@ -118,25 +121,54 @@ export async function renderLayoutPngBlob(
 
     const centerX = rect.outerLeft + rect.outerWidth / 2;
     const centerY = rect.outerTop + rect.outerHeight / 2;
-    const badgeWidth = 54;
-    const badgeHeight = 24;
 
-    ctx.fillStyle = theme.darkHex;
-    drawRoundedRectPath(
-      ctx,
-      centerX - badgeWidth / 2,
-      centerY - badgeHeight / 2,
-      badgeWidth,
-      badgeHeight,
-      5,
-    );
-    ctx.fill();
+    if (mode === 'atem') {
+      const sourceLabel =
+        ATEM_SOURCES.find((s) => s.value === box.atemSource)?.label ?? box.atemSource;
+      ctx.font = '600 12px Inter, system-ui, -apple-system, sans-serif';
+      const textWidth = ctx.measureText(sourceLabel).width;
+      const badgeWidth = Math.max(66, Math.ceil(textWidth) + 22);
+      const badgeHeight = 36;
 
-    ctx.fillStyle = theme.pillTextColor;
-    ctx.font = '600 12px Inter, system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(theme.label, centerX, centerY + 0.5);
+      ctx.fillStyle = theme.darkHex;
+      drawRoundedRectPath(
+        ctx,
+        centerX - badgeWidth / 2,
+        centerY - badgeHeight / 2,
+        badgeWidth,
+        badgeHeight,
+        5,
+      );
+      ctx.fill();
+
+      ctx.fillStyle = theme.pillTextColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 9px Inter, system-ui, -apple-system, sans-serif';
+      ctx.fillText(`BOX ${box.id}`, centerX, centerY - 7);
+      ctx.font = '600 12px Inter, system-ui, -apple-system, sans-serif';
+      ctx.fillText(sourceLabel, centerX, centerY + 6);
+    } else {
+      const badgeWidth = 54;
+      const badgeHeight = 24;
+
+      ctx.fillStyle = theme.darkHex;
+      drawRoundedRectPath(
+        ctx,
+        centerX - badgeWidth / 2,
+        centerY - badgeHeight / 2,
+        badgeWidth,
+        badgeHeight,
+        5,
+      );
+      ctx.fill();
+
+      ctx.fillStyle = theme.pillTextColor;
+      ctx.font = '600 12px Inter, system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(theme.label, centerX, centerY + 0.5);
+    }
 
     ctx.restore();
   }

@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
-import { Download, ImagePlus, Trash2 } from 'lucide-react';
+import { Download, FileCode2, ImagePlus, Trash2 } from 'lucide-react';
+import { computeAtemPosition, getBoxesInDrawOrder } from '../lib/atemMath';
 import {
+  ATEM_SOURCES,
   BOX_THEMES,
   CANVAS_CENTER_X,
   CANVAS_CENTER_Y,
@@ -13,9 +15,10 @@ import { computeBoxVisualRect, computeVmixPan, snapCoordinate } from '../lib/vmi
 import { formatXmlNumber } from '../lib/xmlGenerators';
 import { STRINGS } from '../i18n/strings';
 import { GuidesOverlay } from './GuidesOverlay';
-import type { BoxConfig, DragPrecision, GuideType, LanguageCode } from '../types/layout';
+import type { BoxConfig, BuilderMode, DragPrecision, GuideType, LanguageCode } from '../types/layout';
 
 interface CanvasStageProps {
+  mode: BuilderMode;
   language: LanguageCode;
   boxes: BoxConfig[];
   selectedBoxId: number;
@@ -28,6 +31,7 @@ interface CanvasStageProps {
   onChangeGuide: (guide: GuideType) => void;
   onUploadBackground: (file: File) => void;
   onClearBackground: () => void;
+  onOpenImportMacro: () => void;
   onExportPng: () => void;
   isExportingPng: boolean;
 }
@@ -44,6 +48,7 @@ interface DragState {
 }
 
 export function CanvasStage({
+  mode,
   language,
   boxes,
   selectedBoxId,
@@ -56,6 +61,7 @@ export function CanvasStage({
   onChangeGuide,
   onUploadBackground,
   onClearBackground,
+  onOpenImportMacro,
   onExportPng,
   isExportingPng,
 }: CanvasStageProps) {
@@ -64,8 +70,10 @@ export function CanvasStage({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
 
-  const selectedBox = boxes.find((b) => b.id === selectedBoxId && b.enabled) ?? null;
-  const selectedPan = selectedBox ? computeVmixPan(selectedBox.x, selectedBox.y) : null;
+  const visibleBoxes = getBoxesInDrawOrder(boxes, mode);
+  const selectedBox = visibleBoxes.find((b) => b.id === selectedBoxId) ?? null;
+  const selectedVmixPan = selectedBox ? computeVmixPan(selectedBox.x, selectedBox.y) : null;
+  const selectedAtemPos = selectedBox ? computeAtemPosition(selectedBox.x, selectedBox.y) : null;
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>, box: BoxConfig) => {
     e.preventDefault();
@@ -98,9 +106,7 @@ export function CanvasStage({
     const rawX = dragState.startBoxX + deltaX;
     const rawY = dragState.startBoxY + deltaY;
 
-    const step = e.altKey
-      ? { stepX: 1, stepY: 1 }
-      : DRAG_PRECISION_CONFIG[dragPrecision];
+    const step = e.altKey ? { stepX: 1, stepY: 1 } : DRAG_PRECISION_CONFIG[dragPrecision];
 
     const snappedX = snapCoordinate(rawX, step.stepX, CANVAS_CENTER_X);
     const snappedY = snapCoordinate(rawY, step.stepY, CANVAS_CENTER_Y);
@@ -144,7 +150,11 @@ export function CanvasStage({
     }
 
     e.preventDefault();
-    onMoveBox(selectedBox.id, snapCoordinate(nextX, stepX, CANVAS_CENTER_X), snapCoordinate(nextY, stepY, CANVAS_CENTER_Y));
+    onMoveBox(
+      selectedBox.id,
+      snapCoordinate(nextX, stepX, CANVAS_CENTER_X),
+      snapCoordinate(nextY, stepY, CANVAS_CENTER_Y),
+    );
   };
 
   return (
@@ -192,7 +202,7 @@ export function CanvasStage({
           ref={stageRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
-          aria-label="16:9 vMix layout canvas"
+          aria-label="16:9 broadcast layout canvas"
           className="relative aspect-video w-full overflow-hidden rounded-sm border border-neutral-900 bg-[#121212] shadow-xl outline-none focus-visible:ring-2 focus-visible:ring-sky-400 select-none"
         >
           {backgroundUrl && (
@@ -203,12 +213,13 @@ export function CanvasStage({
             />
           )}
 
-          {boxes.map((box) => {
-            if (!box.enabled) return null;
+          {visibleBoxes.map((box) => {
             const theme = BOX_THEMES[box.id - 1] ?? BOX_THEMES[0];
             const rect = computeBoxVisualRect(box);
             const isSelected = box.id === selectedBoxId;
             const isDragging = dragState?.boxId === box.id;
+            const sourceLabel =
+              ATEM_SOURCES.find((s) => s.value === box.atemSource)?.label ?? box.atemSource;
 
             return (
               <div
@@ -234,7 +245,6 @@ export function CanvasStage({
                   isDragging ? 'cursor-grabbing' : 'cursor-grab'
                 } ${isSelected ? 'ring-2 ring-white/90 ring-inset' : 'hover:brightness-105'}`}
               >
-                {/* Internal alignment crosshair when selected (excluded from PNG export) */}
                 {isSelected && (
                   <div className="pointer-events-none absolute inset-0">
                     <div className="absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 bg-white/35" />
@@ -242,15 +252,30 @@ export function CanvasStage({
                   </div>
                 )}
 
-                <span
-                  style={{
-                    backgroundColor: theme.darkHex,
-                    color: theme.pillTextColor,
-                  }}
-                  className="pointer-events-none relative z-10 rounded px-2.5 py-1 text-xs font-semibold shadow-sm"
-                >
-                  {theme.label}
-                </span>
+                {mode === 'atem' ? (
+                  <div
+                    style={{
+                      backgroundColor: theme.darkHex,
+                      color: theme.pillTextColor,
+                    }}
+                    className="pointer-events-none relative z-10 flex flex-col items-center rounded px-2.5 py-1 shadow-sm"
+                  >
+                    <span className="text-[9px] font-bold tracking-wider uppercase opacity-85">
+                      BOX {box.id}
+                    </span>
+                    <span className="text-xs font-semibold leading-tight">{sourceLabel}</span>
+                  </div>
+                ) : (
+                  <span
+                    style={{
+                      backgroundColor: theme.darkHex,
+                      color: theme.pillTextColor,
+                    }}
+                    className="pointer-events-none relative z-10 rounded px-2.5 py-1 text-xs font-semibold shadow-sm"
+                  >
+                    {theme.label}
+                  </span>
+                )}
               </div>
             );
           })}
@@ -295,17 +320,29 @@ export function CanvasStage({
             )}
           </div>
 
-          {selectedBox && selectedPan && (
-            <div className="hidden items-center gap-2 rounded bg-[#2b2b2b] px-2.5 py-1 font-mono text-[11px] text-neutral-300 sm:flex">
-              <span
-                className="inline-block h-2 w-2 rounded-full"
-                style={{ backgroundColor: BOX_THEMES[selectedBox.id - 1]?.hex }}
-              />
-              <span>
-                Box {selectedBox.id}: ({formatXmlNumber(selectedBox.x)}, {formatXmlNumber(selectedBox.y)})
-                {' · '}Pan({formatXmlNumber(selectedPan.panX)}, {formatXmlNumber(selectedPan.panY)})
-              </span>
-            </div>
+          {mode === 'atem' ? (
+            <button
+              type="button"
+              onClick={onOpenImportMacro}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded border border-sky-400/70 bg-[#2d2d2d] px-3 py-1 font-semibold text-sky-200 transition hover:bg-sky-600 hover:text-white"
+            >
+              <FileCode2 className="h-3.5 w-3.5" />
+              <span>{t.importMacro}</span>
+            </button>
+          ) : (
+            selectedBox &&
+            selectedVmixPan && (
+              <div className="hidden items-center gap-2 rounded bg-[#2b2b2b] px-2.5 py-1 font-mono text-[11px] text-neutral-300 sm:flex">
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: BOX_THEMES[selectedBox.id - 1]?.hex }}
+                />
+                <span>
+                  Box {selectedBox.id}: ({formatXmlNumber(selectedBox.x)}, {formatXmlNumber(selectedBox.y)})
+                  {' · '}Pan({formatXmlNumber(selectedVmixPan.panX)}, {formatXmlNumber(selectedVmixPan.panY)})
+                </span>
+              </div>
+            )
           )}
 
           <button
@@ -319,7 +356,15 @@ export function CanvasStage({
           </button>
         </div>
 
-        <p className="mt-2 text-center text-[11px] text-neutral-400">{t.dragHint}</p>
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-3 text-[11px] text-neutral-400">
+          <span>{t.dragHint}</span>
+          {mode === 'atem' && selectedBox && selectedAtemPos && (
+            <span className="rounded bg-[#2b2b2b] px-2 py-0.5 font-mono text-neutral-300">
+              Box {selectedBox.id} ATEM: ({formatXmlNumber(selectedAtemPos.atemX)},{' '}
+              {formatXmlNumber(selectedAtemPos.atemY)})
+            </span>
+          )}
+        </div>
       </div>
     </section>
   );

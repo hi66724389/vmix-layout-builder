@@ -1,33 +1,75 @@
-import type { BoxConfig, BoxVisualTheme, DragPrecision, GuideType, PresetDefinition } from '../types/layout';
+import type {
+  AtemExportSettings,
+  AtemSourceOption,
+  BoxConfig,
+  BoxVisualTheme,
+  DragPrecision,
+  GuideType,
+  PresetDefinition,
+} from '../types/layout';
 
 export const CANVAS_WIDTH = 768;
 export const CANVAS_HEIGHT = 432;
 export const CANVAS_CENTER_X = CANVAS_WIDTH / 2; // 384
 export const CANVAS_CENTER_Y = CANVAS_HEIGHT / 2; // 216
 
+export const ATEM_SCALE_PX = 24; // 768/32 = 24, 432/18 = 24
+export const ATEM_BOX_COUNT = 4;
+export const VMIX_BOX_COUNT = 9;
+
 export const EXPORT_HD_WIDTH = 1920;
 export const EXPORT_HD_HEIGHT = 1080;
 
 export const MAX_CROP_X = 16;
+export const MAX_CROP_X_HARD = 32;
 export const CROP_DIVISOR_X = 32;
 
 export const MAX_CROP_Y = 9;
+export const MAX_CROP_Y_HARD = 18;
 export const CROP_DIVISOR_Y = 18;
-
-export const BOX_COUNT = 9;
 
 export const DEFAULT_SET_NAME = 'vMix Virtual Set';
 
+export const DEFAULT_ATEM_SETTINGS: AtemExportSettings = {
+  macroName: 'SuperSource Macro',
+  macroIndex: 0,
+  superSource: 1,
+  setInputSources: true,
+  justMacrosName: 'SuperSource Layout',
+  justMacrosIndex: 0,
+};
+
+export const ATEM_SOURCES: AtemSourceOption[] = [
+  { value: 'Camera1', label: 'Camera 1', companionInputId: 1 },
+  { value: 'Camera2', label: 'Camera 2', companionInputId: 2 },
+  { value: 'Camera3', label: 'Camera 3', companionInputId: 3 },
+  { value: 'Camera4', label: 'Camera 4', companionInputId: 4 },
+  { value: 'Camera5', label: 'Camera 5', companionInputId: 5 },
+  { value: 'Camera6', label: 'Camera 6', companionInputId: 6 },
+  { value: 'Camera7', label: 'Camera 7', companionInputId: 7 },
+  { value: 'Camera8', label: 'Camera 8', companionInputId: 8 },
+  { value: 'Camera9', label: 'Camera 9', companionInputId: 9 },
+  { value: 'Camera10', label: 'Camera 10', companionInputId: 10 },
+  { value: 'Camera11', label: 'Camera 11', companionInputId: 11 },
+  { value: 'Camera12', label: 'Camera 12', companionInputId: 12 },
+  { value: 'Color1', label: 'Color 1', companionInputId: 2001 },
+  { value: 'Color2', label: 'Color 2', companionInputId: 2002 },
+  { value: 'MediaPlayer1', label: 'Media Player 1', companionInputId: 3010 },
+  { value: 'MediaPlayer2', label: 'Media Player 2', companionInputId: 3020 },
+  { value: 'MediaPlayer3', label: 'Media Player 3', companionInputId: 3030 },
+  { value: 'MediaPlayer4', label: 'Media Player 4', companionInputId: 3040 },
+];
+
 export const BOX_THEMES: BoxVisualTheme[] = [
-  { id: 1, label: 'Box 1', hex: '#0EA5E9', darkHex: '#0284C7', pillTextColor: '#FFFFFF' },
-  { id: 2, label: 'Box 2', hex: '#22C55E', darkHex: '#16A34A', pillTextColor: '#FFFFFF' },
-  { id: 3, label: 'Box 3', hex: '#A855F7', darkHex: '#9333EA', pillTextColor: '#FFFFFF' },
-  { id: 4, label: 'Box 4', hex: '#EF4444', darkHex: '#DC2626', pillTextColor: '#FFFFFF' },
-  { id: 5, label: 'Box 5', hex: '#F97316', darkHex: '#EA580C', pillTextColor: '#FFFFFF' },
-  { id: 6, label: 'Box 6', hex: '#84CC16', darkHex: '#65A30D', pillTextColor: '#FFFFFF' },
-  { id: 7, label: 'Box 7', hex: '#EC4899', darkHex: '#DB2777', pillTextColor: '#FFFFFF' },
-  { id: 8, label: 'Box 8', hex: '#14B8A6', darkHex: '#0D9488', pillTextColor: '#FFFFFF' },
-  { id: 9, label: 'Box 9', hex: '#EAB308', darkHex: '#CA8A04', pillTextColor: '#1E293B' },
+  { id: 1, label: 'Box 1', hex: '#0EA5E9', darkHex: '#0284C7', pillTextColor: '#FFFFFF', companionRgbInt: 959977 },
+  { id: 2, label: 'Box 2', hex: '#22C55E', darkHex: '#16A34A', pillTextColor: '#FFFFFF', companionRgbInt: 2278750 },
+  { id: 3, label: 'Box 3', hex: '#A855F7', darkHex: '#9333EA', pillTextColor: '#FFFFFF', companionRgbInt: 11032055 },
+  { id: 4, label: 'Box 4', hex: '#EF4444', darkHex: '#DC2626', pillTextColor: '#FFFFFF', companionRgbInt: 15680580 },
+  { id: 5, label: 'Box 5', hex: '#F97316', darkHex: '#EA580C', pillTextColor: '#FFFFFF', companionRgbInt: 16347926 },
+  { id: 6, label: 'Box 6', hex: '#84CC16', darkHex: '#65A30D', pillTextColor: '#FFFFFF', companionRgbInt: 8702998 },
+  { id: 7, label: 'Box 7', hex: '#EC4899', darkHex: '#DB2777', pillTextColor: '#FFFFFF', companionRgbInt: 15485081 },
+  { id: 8, label: 'Box 8', hex: '#14B8A6', darkHex: '#0D9488', pillTextColor: '#FFFFFF', companionRgbInt: 1357990 },
+  { id: 9, label: 'Box 9', hex: '#EAB308', darkHex: '#CA8A04', pillTextColor: '#1E293B', companionRgbInt: 15381256 },
 ];
 
 export const DRAG_PRECISION_CONFIG: Record<
@@ -67,6 +109,7 @@ export const GUIDE_OPTIONS: { value: GuideType; labelEn: string; labelZh: string
 ];
 
 export function createBox(id: number, overrides: Partial<BoxConfig> = {}): BoxConfig {
+  const defaultSource = `Camera${Math.min(id, 12)}`;
   return {
     id,
     enabled: id === 1,
@@ -79,16 +122,17 @@ export function createBox(id: number, overrides: Partial<BoxConfig> = {}): BoxCo
     cropBottom: 0,
     linkX: true,
     linkY: true,
+    atemSource: defaultSource,
     ...overrides,
   };
 }
 
 export function createDefaultBoxes(): BoxConfig[] {
-  return Array.from({ length: BOX_COUNT }, (_, idx) => createBox(idx + 1));
+  return Array.from({ length: VMIX_BOX_COUNT }, (_, idx) => createBox(idx + 1));
 }
 
 function buildPresetBoxes(overridesById: Record<number, Partial<BoxConfig>>): BoxConfig[] {
-  return Array.from({ length: BOX_COUNT }, (_, idx) => {
+  return Array.from({ length: VMIX_BOX_COUNT }, (_, idx) => {
     const id = idx + 1;
     const patch = overridesById[id];
     if (!patch) {

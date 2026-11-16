@@ -1,11 +1,21 @@
 import { useState } from 'react';
 import { Check, ClipboardPaste, Copy, Link2, Unlink2 } from 'lucide-react';
-import { BOX_THEMES, MAX_CROP_X, MAX_CROP_Y } from '../lib/constants';
+import { computeAtemPosition } from '../lib/atemMath';
+import {
+  ATEM_SOURCES,
+  BOX_THEMES,
+  MAX_CROP_X,
+  MAX_CROP_X_HARD,
+  MAX_CROP_Y,
+  MAX_CROP_Y_HARD,
+} from '../lib/constants';
 import { clamp } from '../lib/vmixMath';
+import { formatXmlNumber } from '../lib/xmlGenerators';
 import { STRINGS } from '../i18n/strings';
-import type { BoxClipboard, BoxConfig, LanguageCode } from '../types/layout';
+import type { BoxClipboard, BoxConfig, BuilderMode, LanguageCode } from '../types/layout';
 
 interface BoxCardProps {
+  mode: BuilderMode;
   language: LanguageCode;
   box: BoxConfig;
   isSelected: boolean;
@@ -18,6 +28,7 @@ interface BoxCardProps {
 }
 
 export function BoxCard({
+  mode,
   language,
   box,
   isSelected,
@@ -32,6 +43,8 @@ export function BoxCard({
   const theme = BOX_THEMES[box.id - 1] ?? BOX_THEMES[0];
   const [justCopied, setJustCopied] = useState(false);
 
+  const atemPos = computeAtemPosition(box.x, box.y);
+
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     onCopy();
@@ -40,22 +53,22 @@ export function BoxCard({
   };
 
   const handleLeftChange = (raw: number) => {
-    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_X);
+    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_X_HARD);
     onUpdate(box.linkX ? { cropLeft: val, cropRight: val } : { cropLeft: val });
   };
 
   const handleRightChange = (raw: number) => {
-    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_X);
+    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_X_HARD);
     onUpdate({ cropRight: val });
   };
 
   const handleTopChange = (raw: number) => {
-    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_Y);
+    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_Y_HARD);
     onUpdate(box.linkY ? { cropTop: val, cropBottom: val } : { cropTop: val });
   };
 
   const handleBottomChange = (raw: number) => {
-    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_Y);
+    const val = clamp(Number.isFinite(raw) ? raw : 0, 0, MAX_CROP_Y_HARD);
     onUpdate({ cropBottom: val });
   };
 
@@ -99,10 +112,34 @@ export function BoxCard({
 
       {/* Card Body */}
       <div className="space-y-3 p-3.5 text-xs text-slate-700">
+        {/* ATEM Source Selector */}
+        {mode === 'atem' && (
+          <div className="border-b border-slate-100 pb-3">
+            <label className="block">
+              <span className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                {t.source}
+              </span>
+              <select
+                aria-label={`${theme.label} ${t.source}`}
+                value={box.atemSource}
+                onChange={(e) => onUpdate({ atemSource: e.target.value })}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full cursor-pointer rounded border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-medium text-slate-800 outline-none focus:border-sky-400 focus:bg-white"
+              >
+                {ATEM_SOURCES.map((src) => (
+                  <option key={src.value} value={src.value}>
+                    {src.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
         {/* Position */}
         <div className="border-b border-slate-100 pb-3">
           <div className="mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-            {t.position}
+            {mode === 'atem' ? t.positionAtem : t.position}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <label className="flex items-center gap-1.5 rounded border border-slate-200 bg-slate-50 px-2 py-1 focus-within:border-sky-400 focus-within:bg-white">
@@ -134,6 +171,12 @@ export function BoxCard({
               />
             </label>
           </div>
+          {mode === 'atem' && (
+            <div className="mt-1.5 grid grid-cols-2 gap-2 font-mono text-[11px] text-slate-500">
+              <span>({formatXmlNumber(atemPos.atemX)})</span>
+              <span>({formatXmlNumber(atemPos.atemY)})</span>
+            </div>
+          )}
         </div>
 
         {/* Size */}
@@ -182,14 +225,14 @@ export function BoxCard({
                 max={MAX_CROP_X}
                 step={1}
                 aria-label={`${theme.label} crop left slider`}
-                value={box.cropLeft}
+                value={Math.min(MAX_CROP_X, box.cropLeft)}
                 onChange={(e) => handleLeftChange(parseFloat(e.target.value))}
                 className="studio-slider mb-1.5 w-full"
               />
               <input
                 type="number"
                 min={0}
-                max={MAX_CROP_X}
+                max={MAX_CROP_X_HARD}
                 step={0.5}
                 aria-label={`${theme.label} crop left`}
                 value={box.cropLeft}
@@ -230,14 +273,14 @@ export function BoxCard({
                 step={1}
                 disabled={box.linkX}
                 aria-label={`${theme.label} crop right slider`}
-                value={box.cropRight}
+                value={Math.min(MAX_CROP_X, box.cropRight)}
                 onChange={(e) => handleRightChange(parseFloat(e.target.value))}
                 className="studio-slider mb-1.5 w-full"
               />
               <input
                 type="number"
                 min={0}
-                max={MAX_CROP_X}
+                max={MAX_CROP_X_HARD}
                 step={0.5}
                 disabled={box.linkX}
                 aria-label={`${theme.label} crop right`}
@@ -258,14 +301,14 @@ export function BoxCard({
                 max={MAX_CROP_Y}
                 step={1}
                 aria-label={`${theme.label} crop top slider`}
-                value={box.cropTop}
+                value={Math.min(MAX_CROP_Y, box.cropTop)}
                 onChange={(e) => handleTopChange(parseFloat(e.target.value))}
                 className="studio-slider mb-1.5 w-full"
               />
               <input
                 type="number"
                 min={0}
-                max={MAX_CROP_Y}
+                max={MAX_CROP_Y_HARD}
                 step={0.5}
                 aria-label={`${theme.label} crop top`}
                 value={box.cropTop}
@@ -306,14 +349,14 @@ export function BoxCard({
                 step={1}
                 disabled={box.linkY}
                 aria-label={`${theme.label} crop bottom slider`}
-                value={box.cropBottom}
+                value={Math.min(MAX_CROP_Y, box.cropBottom)}
                 onChange={(e) => handleBottomChange(parseFloat(e.target.value))}
                 className="studio-slider mb-1.5 w-full"
               />
               <input
                 type="number"
                 min={0}
-                max={MAX_CROP_Y}
+                max={MAX_CROP_Y_HARD}
                 step={0.5}
                 disabled={box.linkY}
                 aria-label={`${theme.label} crop bottom`}

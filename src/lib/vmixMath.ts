@@ -5,8 +5,8 @@ import {
   CANVAS_WIDTH,
   CROP_DIVISOR_X,
   CROP_DIVISOR_Y,
-  MAX_CROP_X,
-  MAX_CROP_Y,
+  MAX_CROP_X_HARD,
+  MAX_CROP_Y_HARD,
 } from './constants';
 import type { BoxConfig } from '../types/layout';
 
@@ -61,10 +61,10 @@ export function snapCoordinate(value: number, step: number, centerAnchor: number
  * X1 = left / 32, Y1 = top / 18, X2 = 1 - right / 32, Y2 = 1 - bottom / 18
  */
 export function computeCropFractions(box: BoxConfig): CropFractions {
-  const left = clamp(box.cropLeft, 0, MAX_CROP_X);
-  const right = clamp(box.cropRight, 0, MAX_CROP_X);
-  const top = clamp(box.cropTop, 0, MAX_CROP_Y);
-  const bottom = clamp(box.cropBottom, 0, MAX_CROP_Y);
+  const left = clamp(box.cropLeft, 0, MAX_CROP_X_HARD);
+  const right = clamp(box.cropRight, 0, MAX_CROP_X_HARD);
+  const top = clamp(box.cropTop, 0, MAX_CROP_Y_HARD);
+  const bottom = clamp(box.cropBottom, 0, MAX_CROP_Y_HARD);
 
   const x1 = cleanNumber(left / CROP_DIVISOR_X);
   const y1 = cleanNumber(top / CROP_DIVISOR_Y);

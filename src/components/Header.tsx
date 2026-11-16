@@ -45,7 +45,7 @@ export function Header({
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-xs text-neutral-200">
             <Sparkles className="h-3.5 w-3.5 text-sky-400" />
-            <span className="hidden sm:inline text-neutral-400">{t.presets}:</span>
+            <span className="hidden text-neutral-400 sm:inline">{t.presets}:</span>
             <select
               aria-label={t.presets}
               defaultValue=""
@@ -71,7 +71,7 @@ export function Header({
           <button
             type="button"
             onClick={onReset}
-            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-neutral-200 transition hover:bg-neutral-700 hover:text-white cursor-pointer"
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-medium text-neutral-200 transition hover:bg-neutral-700 hover:text-white"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span>{t.reset}</span>
@@ -80,7 +80,7 @@ export function Header({
           <button
             type="button"
             onClick={onToggleLanguage}
-            className="rounded-md border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-xs font-semibold text-neutral-200 transition hover:bg-neutral-700 hover:text-white cursor-pointer"
+            className="cursor-pointer rounded-md border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-xs font-semibold text-neutral-200 transition hover:bg-neutral-700 hover:text-white"
             title="Switch Language / 切換語言"
           >
             {language === 'en' ? '繁中' : 'EN'}
@@ -89,7 +89,7 @@ export function Header({
           <button
             type="button"
             onClick={onOpenHelp}
-            className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-500 cursor-pointer"
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-500"
           >
             <HelpCircle className="h-3.5 w-3.5" />
             <span>{t.docs}</span>
