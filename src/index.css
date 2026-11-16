@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* Custom compact range slider styling matching clean studio toolbars */
+input[type="range"].studio-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"].studio-slider:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+input[type="range"].studio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--slider-accent, #0ea5e9);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  transition: transform 0.1s ease;
+}
+
+input[type="range"].studio-slider:not(:disabled)::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+
+input[type="range"].studio-slider:disabled::-webkit-slider-thumb {
+  background: #94a3b8;
+}
+
+input[type="range"].studio-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--slider-accent, #0ea5e9);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+/* Smooth horizontal shelf scrollbar */
+.box-shelf-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.box-shelf-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.box-shelf-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.box-shelf-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
